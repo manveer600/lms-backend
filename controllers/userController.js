@@ -1,7 +1,6 @@
 import User from "../models/user.model.js";
 import AppError from "../utils/error.utils.js";
 import emailValidator from 'email-validator';
-import sendEmail from '../utils/sendEmail.js';
 import bcrypt from 'bcrypt';
 import cloudinary from 'cloudinary';
 import crypto from 'crypto';
@@ -10,7 +9,7 @@ const cookieOptions = {
 
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    secure: true,
+    // secure: true,
 }
 
 const register = async (req, res, next) => {
@@ -60,7 +59,6 @@ const register = async (req, res, next) => {
             console.log(req.file);
             try {
                 const result = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'lms' }, (error, result) => {
-                    console.log("ab yahan kya scene h bc")
                     console.log(result, error);
                 });
                 if (result) {
@@ -70,7 +68,14 @@ const register = async (req, res, next) => {
                     console.log(user.avatar.public_id);
                     console.log(user.avatar.secure_url);
                     // remove the file from local machine(server)
-                    fs.rm(`uploads/${req.file.filename}`);
+                    fs.rm(`uploads/${req.file.filename}`, (error) => {
+                        if (error) {
+                            console.error("Error removing the file:", error);
+                        } else {
+                            console.log("File removed successfully");
+                        }
+                    });
+
                 }
             } catch (e) {
                 return next(new AppError(e.message, 400));
@@ -80,16 +85,6 @@ const register = async (req, res, next) => {
         await user.save();
 
 
-        // const token = jwt.sign({
-        //     id:user._id, 
-        //     email:user.email, 
-        //     subscription: user.subscription, 
-        //     role:user.role
-        // },
-        // process.env.JWT_SECRET,
-        // {
-        //     expiresIn:process.env.JWT_EXPIRY
-        // });
 
 
         const token = await user.generateJWTToken();
@@ -102,19 +97,19 @@ const register = async (req, res, next) => {
         })
 
     } catch (e) {
-        console.log("sorry paaji");
         return next(new AppError(e.message, 400));
     }
 }
 
 const logout = (req, res) => {
     try {
-        res.cookie('token', null, {
-            secure: true,
-            maxAge: 0,
-            httpOnly: true
-        })
+        // res.cookie('token', null, {
+        //     secure: true,
+        //     maxAge: 0,
+        //     httpOnly: true
+        // })
 
+        res.cookie('token', null);
         res.status(200).json({
             success: true,
             message: 'User logged out successfully'
@@ -125,11 +120,8 @@ const logout = (req, res) => {
     }
 }
 
-
-const login = async (req, res) => {
+const login = async (req, res, next) => {
     const { email, password } = req.body;
-
-
     try {
         if (!email || !password) {
             return next(new AppError('All fields are required', 400));
@@ -137,21 +129,31 @@ const login = async (req, res) => {
 
         const user = await User.findOne({ email }).select('+password');
 
-        if (!user || !bcrypt.compare(password, user.password)) {
-            return next(new AppError('Email or password is incorrect'), 400);
+
+        if (!user) {
+            return next(new AppError('Email is incorrect', 400));
         }
 
 
 
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordCorrect) {
+            return next(new AppError('Password is incorrect', 400));
+        }
+
+
         const token = await user.generateJWTToken();
+        console.log("Token is:", token);
         user.password = undefined;
 
         res.cookie('token', token, cookieOptions);
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "User LoggedIn successfully",
-            user
+            user,
+            Token: token
         })
 
 
@@ -160,18 +162,25 @@ const login = async (req, res) => {
     }
 }
 
-const getProfile = async (req, res) => {
+const getProfile = async (req, res, next) => {
     try {
         const userId = req.user.id;
+
+        if(!userId){
+            return next(new AppError('User not found'));
+        }
         const user = await User.findById(userId);
 
+        if(!user){
+            return next(new AppError('User not found'));
+        }
         res.status(200).json({
             success: true,
-            message: "User details",
+            message: "Fetched User Details",
             user
         })
     } catch (err) {
-        return next(new AppError("Failed to fetch profile ", 500));
+        return next(new AppError(err.message , 400));
     }
 }
 
@@ -190,7 +199,6 @@ const forgotPassword = async (req, res, next) => {
     try {
 
         const resetToken = await user.generatePasswordResetToken();
-        console.log("mainResetToken:",resetToken);
         await user.save();
 
 
@@ -219,7 +227,7 @@ const forgotPassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
     const { resetToken } = req.params;
     const { password } = req.body;
-    console.log({resetToken,password});
+    console.log({ resetToken, password });
 
 
     if (!password) {
@@ -234,7 +242,7 @@ const resetPassword = async (req, res, next) => {
         .update(resetToken)
         .digest('hex');
 
-    console.log("forgotPasswordToken is: ", hashToken);
+    console.log("HashForgotPassword Token is: ", hashToken);
 
     try {
         const user = await User.findOne({
@@ -246,7 +254,7 @@ const resetPassword = async (req, res, next) => {
             return next(new AppError('Invalid Token or token is expired', 400));
         }
 
-        const hashedPassword = await bcrypt.hash(password,10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         user.password = hashedPassword;
         user.forgotPasswordExpiry = undefined;
@@ -259,13 +267,168 @@ const resetPassword = async (req, res, next) => {
         })
 
     } catch (e) {
-        console.log("sorry paaji");
         return next(new AppError(e.message, 400));
     }
 
 
 }
 
+const changePassword = async (req, res, next) => {
+    // console.log("request is: ", req);
+    // console.log("response is: ", req);
+    const { oldPassword, newPassword } = req.body;
+    const { id } = req.user;
 
 
-export { register, login, logout, getProfile, forgotPassword, resetPassword };
+    if (!oldPassword || !newPassword) {
+        return next(new AppError('Both old and new passwords are required to update your password', 400))
+    }
+
+    if (!id) {
+        return next(new AppError('User does not exists', 400));
+    }
+
+
+    if (oldPassword == newPassword) {
+        return next(new AppError('New Password cannot be same as Old Password', 400));
+    }
+
+
+    try {
+        const user = await User.findById(id).select('+password');
+
+        const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+
+        if (!isPasswordCorrect) {
+            return next(new AppError('Password does not match', 400));
+        }
+
+
+        const encryptedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = encryptedPassword;
+
+        await user.save();
+        user.password = undefined;
+        return res.status(200).json({
+            success: true,
+            message: "Password changed successfully"
+        })
+    } catch (e) {
+        return next(new AppError(e.message, 400));
+    }
+}
+
+const updateUser = async (req, res, next) => {
+
+    if (Object.keys(req.body).length === 0) {
+        return res.status(200).json({
+            message: "Nothing to update"
+        })
+    }
+
+    const { fullName } = req.body;
+
+    const { id } = req.user;
+
+    const user = await User.findById(id);
+
+    if (!user) {
+        return next(new AppError('No such user found in the database', 404));
+    }
+
+    if (req.body.fullName) {
+        user.fullName = fullName;
+    }
+
+    if (req.file) {
+        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+        
+        user.avatar.public_id = null;
+        user.avatar.secure_url = null;
+
+        try {
+            const result = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'lms' }, (error, result) => {
+                console.log(result, error);
+            });
+
+            if (result) {
+                user.avatar.public_id = result.public_id;
+                user.avatar.secure_url = result.secure_url;
+
+                console.log(user.avatar.public_id);
+                console.log(user.avatar.secure_url);
+
+
+                fs.rm(`uploads/${req.file.filename}`, (error) => {
+                    if (error) {
+                        console.error("Error removing the file:", error);
+                    } else {
+                        console.log("File removed successfully");
+                    }
+                });
+            }
+
+
+            await user.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "User details updated successfully"
+            });
+        }
+
+        catch (e) {
+            return next(new AppError(e.message, 400));
+        }
+    }
+
+
+}
+
+
+const deleteUser = async (req, res, next) => {
+    const { email, password } = req.body;
+
+
+    if(!password || !email){
+        return next(new AppError('Please provide your password and email', 400))
+    }
+
+    try {
+        const user = await User.findOne({ email }).select("+password");
+
+        if (!user) {
+            // User with the provided email does not exist
+            return res.status(404).json({
+                message: 'User not found',
+            });
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password,user.password);
+
+        if(!isPasswordCorrect){
+            return next(new AppError('Password Incorrect'), 400);
+        }
+
+        //delete avatar from cloudinary
+        if (user.avatar) {
+            await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+        } else {
+            console.log("No avatar on cloudinary");
+        }
+
+
+        await User.deleteOne({ _id: user._id });
+
+        return res.status(200).json({
+            message: 'User deleted successfully',
+        });
+    } catch (e) {
+        console.log(e.message);
+        return next(new AppError('Something went wrong', 500))
+    }
+
+}
+
+
+export { register, login, logout, getProfile, forgotPassword, resetPassword, changePassword, updateUser, deleteUser };

@@ -1,15 +1,23 @@
 import jwt from "jsonwebtoken";
-const isLoggedIn = async (req,res,next)=>{
-    const {token} = req.cookie;
+import AppError from "../utils/error.utils.js";
+const isLoggedIn = async (req, res, next) => {
 
-    if(!token){
+    try {
+        const { token } = req.cookies;
+
+        if (!token) {
+            return next(new AppError('Unauthenticated, Please login', 400));
+        }
+
+        console.log(token);
+
+        const userDetails = await jwt.verify(token, process.env.JWT_SECRET);
+        req.user = userDetails;
+        next();
+        
+    } catch (e) {
         return next(new AppError('Unauthenticated, Please login', 400));
     }
-
-    const userDetails = await jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = userDetails;
-    next();
 }
 
 export default isLoggedIn;
