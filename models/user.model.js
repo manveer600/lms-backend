@@ -50,7 +50,7 @@ userSchema.methods = {
             {
                 id:this._id, 
                 email:this.email, 
-                // subscription: this.subscription, 
+                subscription: this.subscription, 
                 role:this.role
             },
             process.env.JWT_SECRET,
