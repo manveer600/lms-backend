@@ -32,7 +32,7 @@ const register = async (req, res, next) => {
         const userExists = await User.findOne({ email });
 
         if (userExists) {
-            return next(new AppError('Email already exists', 400));
+            return next(new AppError('Email already exists', 409));
         }
 
         //The higher the number, the more secure the hash will be, but it will also take longer to compute. Therefore, it's a balance between security and performance.
@@ -131,7 +131,7 @@ const login = async (req, res, next) => {
 
 
         if (!user) {
-            return next(new AppError('Email is incorrect', 400));
+            return next(new AppError(`User doesn't exist`, 400));
         }
 
 
@@ -346,43 +346,44 @@ const updateUser = async (req, res, next) => {
         user.avatar.public_id = null;
         user.avatar.secure_url = null;
 
-        try {
-            const result = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'lms' }, (error, result) => {
-                console.log(result, error);
-            });
-
-            if (result) {
-                user.avatar.public_id = result.public_id;
-                user.avatar.secure_url = result.secure_url;
-
-                console.log(user.avatar.public_id);
-                console.log(user.avatar.secure_url);
-
-
-                fs.rm(`uploads/${req.file.filename}`, (error) => {
-                    if (error) {
-                        console.error("Error removing the file:", error);
-                    } else {
-                        console.log("File removed successfully");
-                    }
-                });
-            }
-
-
-            await user.save();
-
-            return res.status(200).json({
-                success: true,
-                message: "User details updated successfully"
-            });
+        let result;
+        try{
+            result = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'lms' });
+        }catch(e){
+            console.log('Error uploading to cloudinary', error);
         }
 
-        catch (e) {
-            return next(new AppError(e.message, 400));
+        if (result) {
+            user.avatar.public_id = result.public_id;
+            user.avatar.secure_url = result.secure_url;
+
+            console.log(user.avatar.public_id);
+            console.log(user.avatar.secure_url);
+
+
+            fs.unlink(`uploads/${req.file.filename}`, (error) => {
+                if (error) {
+                    console.error("Error removing the file:", error);
+                } else {
+                    console.log("File removed successfully");
+                }
+            });
         }
     }
 
 
+    try {
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "User details updated successfully"
+        });
+    }
+
+    catch (e) {
+        return next(new AppError(e.message, 400));
+    }
 }
 
 

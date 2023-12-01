@@ -4,13 +4,12 @@ import cloudinary from 'cloudinary';
 import fs from 'fs';
 
 export const getAllCourses = async (req, res, next) => {
-
     try {
         const courses = await Course.find({}).select('-lectures');
         res.status(200).json({
             success: true,
             message: 'All Courses',
-            courses
+            courses    /*array of array*/
         })
     } catch (e) {
         return next(new AppError(e.message, 400));
@@ -86,7 +85,7 @@ export const createCourse = async (req, res, next) => {
         await course.save();
 
         res.status(200).json({
-            Sucess: true,
+            success: true,
             Message: "Course Created Successfully",
             course
         })
