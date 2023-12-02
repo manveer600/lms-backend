@@ -30,7 +30,7 @@ export const getLecturesByCourseId = async (req, res, next) => {
         res.status(200).json({
             Success: true,
             Message: `${course.title} lectures fetched successfully`,
-            Lectures: course.lectures
+            lectures: course.lectures
         })
 
     } catch (e) {
@@ -206,18 +206,18 @@ export const addLectureToCourseById = async (req, res, next) => {
         }
 
         let lecture = {};
-        const lectureData = { title, description, lecture };
-
+        
         if (req.file) {
-            const result = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'lms' });
+            const result = await cloudinary.v2.uploader.upload(req.file.path, {
+                folder: 'lms', // Save files in a folder named lms
+                chunk_size: 50000000, // 50 mb size
+                resource_type: 'video',
+            });
 
             if (result) {
-
-                if (result) {
-                    lecture.public_id = result.public_id;
-                    lecture.secure_url = result.secure_url;
-                }
-
+                lecture.public_id = result.public_id;
+                lecture.secure_url = result.secure_url;
+                console.log("result is", lecture);
             }
 
 
@@ -230,6 +230,8 @@ export const addLectureToCourseById = async (req, res, next) => {
             });
         }
 
+        const lectureData = { title, description, lecture };
+        console.log(lectureData);
         course.lectures.push(lectureData);
 
         course.numberOfLectures = course.lectures.length;
@@ -244,6 +246,7 @@ export const addLectureToCourseById = async (req, res, next) => {
 
     } catch (e) {
         console.log('Error in adding lecture to course');
+        console.log(e);
         return next(new AppError(e.message, 400));
     }
 }
@@ -258,9 +261,9 @@ export const updateLecturesOfSpecificCourse = async (req, res, next) => {
         }
 
         const { title, description } = req.body;
-        console.log("Title is:", title); 
-        console.log("Description is:", description); 
-        
+        console.log("Title is:", title);
+        console.log("Description is:", description);
+
         const { id } = req.params;
 
         if (!id) {
@@ -285,25 +288,25 @@ export const updateLecturesOfSpecificCourse = async (req, res, next) => {
             return next(new AppError("Lecture not found", 404));
         }
 
-        console.log( "Lecture found is:", lecture);
+        console.log("Lecture found is:", lecture);
 
         if (title) {
             lecture.title = title;
         }
-        
+
         if (description) {
             lecture.description = description;
         }
-        
+
 
         if (req.file) {
             await cloudinary.v2.uploader.destroy(lecture.lecture.public_id);
             lecture.lecture.public_id = 'dummy';
             lecture.lecture.secure_url = 'dummy';
 
-            const result = await cloudinary.v2.uploader.upload(req.file.path, {folder:'lms'});
+            const result = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'lms' });
             console.log("Result is:", result);
-            if(result){
+            if (result) {
                 lecture.lecture.public_id = result.public_id;
                 lecture.lecture.secure_url = result.secure_url;
             }
@@ -332,8 +335,8 @@ export const updateLecturesOfSpecificCourse = async (req, res, next) => {
     }
 }
 
-export const deleteLecturesOfSpecificCourse = async (req,res,next)=>{
-    try{
+export const deleteLecturesOfSpecificCourse = async (req, res, next) => {
+    try {
         const { id } = req.params;
 
         if (!id) {
@@ -346,27 +349,31 @@ export const deleteLecturesOfSpecificCourse = async (req,res,next)=>{
             return next(new AppError("Please provide a valid id for the lecture.", 400));
         }
 
+        
 
         const course = await Course.findById(id);
-
+        console.log(course);
+        console.log(lectureId);
+        console.log(id)
         if (!course) {
             return next(new AppError("No such course found.", 404));
         }
 
-        const lectureIndex = await course.lectures.findIndex(obj => obj._id == lectureId);
-
-        if(lectureIndex == -1) {
+        const lectureIndex = await course.lectures.findIndex(obj => obj._id.toString() === lectureId.toString());
+        console.log(lectureIndex);
+        if (lectureIndex == -1) {
             return next(new AppError('Lecture not found with this id', 404));
         }
 
-        course.lectures.splice(lectureIndex,1);
+        course.lectures.splice(lectureIndex, 1);
         await course.save();
 
         return res.status(200).json({
-            Message:"Lecture deleted successfully",
-            Success:"true"
+            Message: "Lecture deleted successfully",
+            Success: "true"
         })
-    }catch(e){
+    } catch (e) {
+        console.log(e);
         return next(new AppError(e.message, 500));
     }
 }
