@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import AppError from "../utils/error.utils.js";
 import User from "../models/user.model.js";
-export const isLoggedIn = async (req, res, next) => {
+export const isLoggedIn = async(req, res, next) => {
     console.log("trying to log in");
     try {
         const { token } = req.cookies;
@@ -22,14 +22,15 @@ export const isLoggedIn = async (req, res, next) => {
     }
 }
 
-export const authorizedRoles = async (req, res, next) => {
-    const currentUserRoles = req.user.role;
+export const authorizedRoles = async(req, res, next) => {
+    const currentUserRole = req.user.role;
 
-    if (currentUserRoles == "USER") {
+    if (currentUserRole == "USER") {
         return next(new AppError(`You don't have permission to access this`, 403));
     }
-
-    next();
+    else{ 
+        next()
+    };
 }
 
 

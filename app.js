@@ -6,6 +6,7 @@ import userRoutes from "./routes/userRoutes.js"
 import courseRoutes from './routes/courseRoutes.js';
 import errorMiddleware from './middlewares/error.Middleware.js'
 import paymentRoutes from './routes/paymentRoutes.js';
+import miscellaneousRoutes from './routes/miscellaneousRoutes.js';
 import { config } from 'dotenv';
 config();
 
@@ -23,24 +24,17 @@ app.use(cors({
   }));
 
 //   FRONTEND_URL= 'http://localhost:5173'
-
 // app.use(cors());
-// http://localhost:5173/
 
-app.get('/ping',(req,res)=>{
-    res.send('Pong');
-})
-
-
-// routes of 3 modules;
 app.use("/api/v1/user", userRoutes);
 app.use('/api/v1/courses', courseRoutes );
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1', miscellaneousRoutes);
 
 app.all('*', (req,res)=>{
     res.status(404).send('OOPS! 404 Page not found');
 });
-
+// app.options('*', cors());
 app.use(errorMiddleware);
 
 export default app;

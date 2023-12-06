@@ -28,8 +28,8 @@ export const getLecturesByCourseId = async (req, res, next) => {
         }
 
         res.status(200).json({
-            Success: true,
-            Message: `${course.title} lectures fetched successfully`,
+            success: true,
+            message: `${course.title} lectures fetched successfully`,
             lectures: course.lectures
         })
 
@@ -106,8 +106,8 @@ export const removeCourse = async (req, res, next) => {
         await Course.findByIdAndDelete(id);
 
         res.status(200).json({
-            Success: true,
-            Message: "Course has been successfully deleted"
+            success: true,
+            message: "Course has been successfully deleted"
         })
     }
     catch (e) {
@@ -238,8 +238,8 @@ export const addLectureToCourseById = async (req, res, next) => {
         await course.save();
 
         res.status(200).json({
-            Success: true,
-            Message: "Lecture Successfully Added",
+            success: true,
+            message: "Lecture Successfully Added",
             course
         })
 
