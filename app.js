@@ -1,4 +1,4 @@
-import express  from 'express';
+import express from 'express';
 import cors from 'cors'
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
@@ -8,6 +8,7 @@ import errorMiddleware from './middlewares/error.Middleware.js'
 import paymentRoutes from './routes/paymentRoutes.js';
 import miscellaneousRoutes from './routes/miscellaneousRoutes.js';
 import { config } from 'dotenv';
+import Course from './models/course.model.js';
 config();
 
 const app = express();
@@ -19,20 +20,22 @@ app.use(morgan('dev'));
 app.use(cookieParser());
 
 app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-  }));
+  origin: 'http://localhost:5173',
+  credentials: true,
+}));
 
 //   FRONTEND_URL= 'http://localhost:5173'
 // app.use(cors());
 
+
+
 app.use("/api/v1/user", userRoutes);
-app.use('/api/v1/courses', courseRoutes );
+app.use('/api/v1/courses', courseRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1', miscellaneousRoutes);
 
-app.all('*', (req,res)=>{
-    res.status(404).send('OOPS! 404 Page not found');
+app.all('*', (req, res) => {
+  res.status(404).send('OOPS! 404 Page not found');
 });
 // app.options('*', cors());
 app.use(errorMiddleware);

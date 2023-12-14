@@ -1,25 +1,36 @@
 import nodemailer from 'nodemailer';
-const sendEmail = async (email, subject, message) => {
+const sendEmail = async () => {
+    let testAccount = await nodemailer.createTestAccount();
     try {
+        const testAccount = await nodemailer.createTestAccount();
+
         const transporter = nodemailer.createTransport({
-            service:'gmail',
+            host: 'smtp.ethereal.email',
+            port: 587,
             auth: {
-                user: process.env.SMTP_USERNAME,
-                pass: process.env.SMTP_PASSWORD,
+                user: testAccount.user,
+                pass: testAccount.pass,
             },
         });
 
-        await transporter.sendMail({
-            from: process.env.SMTP_USERNAME,
-            to: email,
-            subject: subject,
-            html: message,
+        const info = await transporter.sendMail({
+            from: testAccount.user,
+            to: 'recipient@example.com',
+            subject: 'Subject',
+            text: 'Message body',
         });
+        
 
         console.log("email sent sucessfully");
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     } catch (error) {
-        console.log(error, "email not sent");
+        if (error.code === 'EAUTH') {
+            console.log('Invalid username or password');
+        } else {
+            console.log('Error:', error, 'Email not sent');
+        }
     }
+
 };
 
 export default sendEmail;

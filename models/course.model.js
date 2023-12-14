@@ -11,8 +11,7 @@ const courseSchema = mongoose.Schema({
     description: {
         type: String,
         required:[true,'Description is required'],
-        minLength:[20,'Description must be atleast 20 characters long'],
-        maxLength:[200,'Description should be atmost 200 characters long.'],
+        minLength:[20,'Description must be atleast 20 characters long']
     },
     category: {
         type: String,

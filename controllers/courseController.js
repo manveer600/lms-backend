@@ -377,3 +377,19 @@ export const deleteLecturesOfSpecificCourse = async (req, res, next) => {
         return next(new AppError(e.message, 500));
     }
 }
+
+export const deleteAllCourses = async (req, res, next) => {
+    console.log('chal shukr h yahan tk toh ponch rha hoon')
+    try {
+        // Use the Mongoose model directly to delete all documents from the collection
+        await Course.deleteMany({});
+        
+        return res.status(200).json({
+            success: true,
+            message: "Deleted all courses."
+        });
+    } catch (e) {
+        console.log(e);
+        return next(new AppError(e.message, 500));
+    }
+};

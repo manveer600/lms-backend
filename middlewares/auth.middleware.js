@@ -15,22 +15,23 @@ export const isLoggedIn = async(req, res, next) => {
         const userDetails = await jwt.verify(token, process.env.JWT_SECRET);
         req.user = userDetails;
         console.log('req.user is:', req.user);       
-         next();
+        return next();
         
     } catch (e) {
         return next(new AppError('Unauthenticated, Please login', 400));
     }
 }
 
-export const authorizedRoles = async(req, res, next) => {
+export const authorizedRoles = (req, res, next) => {
+    console.log('nhi ho rha')
     const currentUserRole = req.user.role;
-
+    console.log(currentUserRole);
+    console.log('authorizing ....')
     if (currentUserRole == "USER") {
         return next(new AppError(`You don't have permission to access this`, 403));
     }
-    else{ 
-        next()
-    };
+    console.log('aage jao');
+    return next();
 }
 
 

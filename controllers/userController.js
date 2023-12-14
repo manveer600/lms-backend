@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import cloudinary from 'cloudinary';
 import crypto from 'crypto';
 import fs from 'fs';
+import sendEmail from "../utils/sendEmail.js";
 const cookieOptions = {
 
     maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -202,12 +203,13 @@ const forgotPassword = async (req, res, next) => {
         await user.save();
 
 
+        
         // const resetPasswordUrl = `${process.env.FRONTEND_URL}reset-password/${resetToken}`;
         // console.log(resetPasswordUrl);
 
         // const subject = "Reset Password Mail";
         // const message = resetPasswordUrl;
-        // await sendEmail(email, subject, message);
+        await sendEmail();
 
         return res.status(200).json({
             success: true,
