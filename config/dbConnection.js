@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 (()=>{
     try{
-        mongoose.connect(process.env.MONGODB_URL || "mongodb://0.0.0.0:27017/LMS").then((conn)=>{
+        mongoose.connect('mongodb+srv://singhmanveer645:1234567890@cluster0.dd5vd23.mongodb.net/').then((conn)=>{
             console.log(`Connection Successfull to database:${conn.connection.name}`);
         });
     }catch(e){
