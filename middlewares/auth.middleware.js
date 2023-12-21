@@ -27,7 +27,7 @@ export const authorizedRoles = (req, res, next) => {
     const currentUserRole = req.user.role;
     console.log(currentUserRole);
     console.log('authorizing ....')
-    if (currentUserRole == "USER") {
+    if (currentUserRole === "USER") {
         return next(new AppError(`You don't have permission to access this`, 403));
     }
     console.log('aage jao');
