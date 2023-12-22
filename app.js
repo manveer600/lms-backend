@@ -8,7 +8,6 @@ import errorMiddleware from './middlewares/error.Middleware.js'
 import paymentRoutes from './routes/paymentRoutes.js';
 import miscellaneousRoutes from './routes/miscellaneousRoutes.js';
 import { config } from 'dotenv';
-import Course from './models/course.model.js';
 config();
 
 const app = express();
@@ -20,7 +19,7 @@ app.use(morgan('dev'));
 app.use(cookieParser());
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin:process.env.FRONTEND_URL,
   credentials: true,
 }));
 
