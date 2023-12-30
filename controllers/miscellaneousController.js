@@ -55,7 +55,6 @@ export const contactUs = async (req, res) => {
     }
 };
 
-
 export const favouriteCourses = async (req, res, next) =>{
     const {id} = req.params;
 
@@ -95,7 +94,6 @@ export const favouriteCourses = async (req, res, next) =>{
     })
 }
 
-
 export const deleteFavCourses = async(req,res,next) => {
     const {id} = req.params;
     console.log(id);
@@ -112,7 +110,6 @@ export const deleteFavCourses = async(req,res,next) => {
         message:'Course removed from favourites'
     })
 }
-
 
 export const getAllFavCourses = async(req,res,next) =>{
     try{

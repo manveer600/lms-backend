@@ -98,6 +98,7 @@ const register = async (req, res, next) => {
         })
 
     } catch (e) {
+        console.log(e);
         return next(new AppError(e.message, 400));
     }
 }
