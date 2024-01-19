@@ -7,10 +7,9 @@ import crypto from 'crypto';
 import fs from 'fs';
 import sendEmail from "../utils/sendEmail.js";
 const cookieOptions = {
-
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    // secure: true,
+    // httpOnly: true,
+    secure: true,
 }
 
 const register = async (req, res, next) => {
@@ -91,6 +90,8 @@ const register = async (req, res, next) => {
         const token = await user.generateJWTToken();
         res.cookie('token', token, cookieOptions)
         user.password = undefined;
+        console.log('token ready hai',token);
+        console.log(res.cookie);
         return res.status(200).json({
             success: true,
             message: 'User registered successfully',
@@ -150,7 +151,7 @@ const login = async (req, res, next) => {
         user.password = undefined;
 
         res.cookie('token', token, cookieOptions);
-
+        console.log(res.cookie.token);
         return res.status(200).json({
             success: true,
             message: "User LoggedIn successfully",

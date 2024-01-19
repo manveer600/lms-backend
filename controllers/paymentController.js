@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import Payment from '../models/payment.model.js'
 
 export const getRazorpayApiKey = async (req, res, next) => {
+    console.log('razorpayapikey response:');
     res.status(200).json({
         success: true,
         message: 'Razorpay API key',

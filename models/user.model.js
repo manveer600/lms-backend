@@ -50,6 +50,7 @@ const userSchema  = mongoose.Schema({
 
 userSchema.methods = {
     generateJWTToken: async function(){
+        console.log('token bna rhe h');
         return await jwt.sign(
             {
                 id:this._id, 
@@ -62,6 +63,7 @@ userSchema.methods = {
                 expiresIn:process.env.JWT_EXPIRY
             }
         )
+
     },
     generatePasswordResetToken: async function(){
         const resetToken = crypto.randomBytes(20).toString('hex');

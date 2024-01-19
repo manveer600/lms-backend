@@ -3,10 +3,12 @@ import AppError from "../utils/error.utils.js";
 import User from "../models/user.model.js";
 export const isLoggedIn = async(req, res, next) => {
     console.log("trying to log in");
+    console.log(req.cookies);
     try {
         const { token } = req.cookies;
-
+        console.log(token);
         if (!token) {
+            console.log('token ni mil rha');
             return next(new AppError('Unauthenticated, Please login', 400));
         }
 

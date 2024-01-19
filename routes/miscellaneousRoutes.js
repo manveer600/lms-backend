@@ -6,9 +6,9 @@ console.log('yahan tk ponch gya');
 import express from "express";
 const router = express.Router();
 
-router.post('/favouriteCourses/:id', isLoggedIn, favouriteCourses);
-router.delete('/favouriteCourses/:id', isLoggedIn, deleteFavCourses);
-router.get('/getAllFavCourses', isLoggedIn, getAllFavCourses);
+// router.post('/favouriteCourses/:id', isLoggedIn, favouriteCourses);
+// router.delete('/favouriteCourses/:id', isLoggedIn, deleteFavCourses);
+// router.get('/getAllFavCourses', isLoggedIn, getAllFavCourses);
 router.get('/admin/stats/users', isLoggedIn, authorizedRoles, userStats);
 router.post('/contact', isLoggedIn, contactUs )
 

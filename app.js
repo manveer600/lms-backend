@@ -11,20 +11,27 @@ import { config } from 'dotenv';
 config();
 
 const app = express();
+// app.use(cors({
+//   origin:process.env.FRONTEND_URL,
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   optionsSuccessStatus: 204,
+// }));
+
+app.use(
+  cors({
+    origin: [process.env.FRONTEND_URL],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(morgan('dev'));
 app.use(cookieParser());
-
-app.use(cors({
-  origin:process.env.FRONTEND_URL,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 204,
-}));
+// app.use(express.static(path.resolve(__dirname,'build')));
 
 
 //   FRONTEND_URL= 'http://localhost:5173'
