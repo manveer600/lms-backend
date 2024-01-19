@@ -11,10 +11,11 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 },
     storage: multer.diskStorage({
         destination: function(req, file, cb){
-            cb(null, path.join(__dirname, 'uploads'));
+            cb(null,'uploads');
         },
         
         filename: function (req, file, cb) {
+            console.log('MULTER K ANDR HOON BROOOO', `${Date.now()}-${file.originalname}`);
             return cb(null, `${Date.now()}-${file.originalname}`);
         }
     }),
@@ -33,3 +34,13 @@ const upload = multer({
 });
 
 export default upload;
+
+
+
+
+
+// import multer from 'multer';
+// const storage = multer.memoryStorage();
+// const singleUpload = multer({ storage }).single('file');
+
+// export default singleUpload;
