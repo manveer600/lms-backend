@@ -9,6 +9,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import miscellaneousRoutes from './routes/miscellaneousRoutes.js';
 import { config } from 'dotenv';
 
+
 config();
 
 const app = express();
@@ -23,6 +24,7 @@ app.use(
     optionsSuccessStatus: 204,
   })
 );
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
