@@ -1,20 +1,24 @@
 import multer from 'multer';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-                    
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const upload = multer({
     dest: 'uploads/',
     limits: { fileSize: 50 * 1024 * 1024 },
     storage: multer.diskStorage({
         destination: function(req, file, cb){
-            cb(null,path.join(__dirname,'/uploads'));
+            cb(null, path.join(__dirname, 'uploads'));
         },
         
         filename: function (req, file, cb) {
-            return cb(null, `${Date.now()}-${file.originalname}`)
+            return cb(null, `${Date.now()}-${file.originalname}`);
         }
     }),
-    fileFilter: function(req,file,cb){
+    fileFilter: function(req, file, cb){
         let extension = path.extname(file.originalname);
         if( extension !== '.png' && 
             extension !== '.jpg' && 
