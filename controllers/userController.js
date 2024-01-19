@@ -7,9 +7,10 @@ import crypto from 'crypto';
 import fs from 'fs';
 import sendEmail from "../utils/sendEmail.js";
 const cookieOptions = {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    // httpOnly: true,
-    secure: true,
+    expires:new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) ,
+    httpOnly:true,
+    secure:true,
+    sameSite:"none"
 }
 
 const register = async (req, res, next) => {
@@ -112,8 +113,15 @@ const logout = (req, res) => {
         //     httpOnly: true
         // })
 
-        res.cookie('token', null);
-        res.status(200).json({
+        // res.cookie('token', null);
+        res
+        .cookie('token', null, {
+            secure: true,
+            expires: new Date(Date.now()+0),
+            httpOnly: true,
+            sameSite:"none"
+        })
+        .status(200).json({
             success: true,
             message: 'User logged out successfully'
         })
@@ -150,14 +158,14 @@ const login = async (req, res, next) => {
         console.log("Token is:", token);
         user.password = undefined;
 
-        res.cookie('token', token, cookieOptions);
-        console.log(res.cookie.token);
-        return res.status(200).json({
+        res
+        .cookie('token', token, cookieOptions)
+        .status(200).json({
             success: true,
             message: "User LoggedIn successfully",
             user,
             Token: token
-        })
+        });
 
 
     } catch (e) {
