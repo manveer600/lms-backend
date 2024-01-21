@@ -66,20 +66,30 @@ export const createCourse = async (req, res, next) => {
 
 
         if (req.file) {
-            const result = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'lms' });
 
-            if (result) {
-                course.thumbnail.secure_url = result.secure_url;
-                course.thumbnail.public_id = result.public_id;
+
+            try {
+                const result = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'lms' });
+                if (result) {
+                    course.thumbnail.secure_url = result.secure_url;
+                    course.thumbnail.public_id = result.public_id;
+                }
+
+                fs.rm(`uploads/${req.file.filename}`, (err) => {
+                    if (err) {
+                        console.log('Error in removing file', err);
+                    } else {
+                        console.log('File removed');
+                    }
+                });
+            } catch (e) {
+                console.log(e);
+                res.status(500).json({
+                    message: "some error has occured"
+                })
             }
 
-            fs.rm(`uploads/${req.file.filename}`, (err) => {
-                if (err) {
-                    console.log('Error in removing file', err);
-                } else {
-                    console.log('File removed');
-                }
-            });
+
         }
 
         await course.save();
@@ -206,28 +216,35 @@ export const addLectureToCourseById = async (req, res, next) => {
         }
 
         let lecture = {};
-        
+
         if (req.file) {
-            const result = await cloudinary.v2.uploader.upload(req.file.path, {
-                folder: 'lms', // Save files in a folder named lms
-                chunk_size: 50000000, // 50 mb size
-                resource_type: 'video',
-            });
+            try {
+                const result = await cloudinary.v2.uploader.upload(req.file.path, {
+                    folder: 'lms', // Save files in a folder named lms
+                    resource_type: 'video',
+                });
 
-            if (result) {
-                lecture.public_id = result.public_id;
-                lecture.secure_url = result.secure_url;
-                console.log("result is", lecture);
-            }
-
-
-            fs.rm(`uploads/${req.file.filename}`, (err) => {
-                if (err) {
-                    console.log('Error in removing file');
-                } else {
-                    console.log('File removed');
+                if (result) {
+                    lecture.public_id = result.public_id;
+                    lecture.secure_url = result.secure_url;
+                    console.log("result is", lecture);
                 }
-            });
+
+
+                fs.rm(`uploads/${req.file.filename}`, (err) => {
+                    if (err) {
+                        console.log('Error in removing file');
+                    } else {
+                        console.log('File removed');
+                    }
+                });
+
+            } catch (e) {
+                console.log(e);
+                res.status(500).json({
+                    message: 'some error has occured'
+                })
+            }
         }
 
         const lectureData = { title, description, lecture };
@@ -349,7 +366,7 @@ export const deleteLecturesOfSpecificCourse = async (req, res, next) => {
             return next(new AppError("Please provide a valid id for the lecture.", 400));
         }
 
-        
+
 
         const course = await Course.findById(id);
         console.log(course);
@@ -383,7 +400,7 @@ export const deleteAllCourses = async (req, res, next) => {
     try {
         // Use the Mongoose model directly to delete all documents from the collection
         await Course.deleteMany({});
-        
+
         return res.status(200).json({
             success: true,
             message: "Deleted all courses."

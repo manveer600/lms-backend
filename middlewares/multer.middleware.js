@@ -7,13 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const upload = multer({
-    dest: '../uploads/',
+    dest: 'uploads/',
     limits: { fileSize: 50 * 1024 * 1024 },
     storage: multer.diskStorage({
-        destination: function(req, file, cb){
-            cb(null,__dirname);
-        },
-        
+        destination: "uploads/",
         filename: function (req, file, cb) {
             console.log('MULTER K ANDR HOON BROOOO', `${Date.now()}-${file.originalname}`);
             return cb(null, `${Date.now()}-${file.originalname}`);
