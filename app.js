@@ -8,11 +8,6 @@ import errorMiddleware from './middlewares/error.Middleware.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import miscellaneousRoutes from './routes/miscellaneousRoutes.js';
 import { config } from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 config();
 
@@ -28,7 +23,6 @@ app.use(
     optionsSuccessStatus: 204,
   })
 );
-app.use(express.static(__dirname));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
