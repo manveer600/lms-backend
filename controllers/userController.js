@@ -20,8 +20,6 @@ const register = async (req, res, next) => {
         const { fullName, email, password } = req.body;
         console.log(req.body);
         if (!fullName || !email || !password) {
-            //MERE PASS 1 ERROR OBJECT AAYA MENE USKO AAGE BHEJ DIYA AB AAGE KAHAN ?
-            //AAGE MTLB ERROR.MIDDLEWARE.JS ME 
             return next(new AppError('All fields are required', 400));
         }
 
@@ -107,13 +105,6 @@ const register = async (req, res, next) => {
 
 const logout = (req, res) => {
     try {
-        // res.cookie('token', null, {
-        //     secure: true,
-        //     maxAge: 0,
-        //     httpOnly: true
-        // })
-
-        // res.cookie('token', null);
         res
         .cookie('token', null, {
             secure: true,
@@ -195,140 +186,8 @@ const getProfile = async (req, res, next) => {
     }
 }
 
-const forgotPassword = async (req, res, next) => {
-    const { email } = req.body;
-    if (!email) {
-        return next(new AppError('Email Required', 400));
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-        return next(new AppError('Email not registered', 400));
-    }
 
 
-    try {
-
-        const resetToken = await user.generatePasswordResetToken();
-        await user.save();
-
-
-        
-        // const resetPasswordUrl = `${process.env.FRONTEND_URL}reset-password/${resetToken}`;
-        // console.log(resetPasswordUrl);
-
-        // const subject = "Reset Password Mail";
-        // const message = resetPasswordUrl;
-        await sendEmail();
-
-        return res.status(200).json({
-            success: true,
-            message: `Reset Password Token has been sent to ${email} successfully`,
-        })
-    }
-    catch (e) {
-        user.forgotPasswordExpiry = undefined;
-        user.forgotPasswordToken = undefined;
-
-        await user.save();
-        return next(new AppError(e.message, 500));
-
-    }
-}
-
-const resetPassword = async (req, res, next) => {
-    const { resetToken } = req.params;
-    const { password } = req.body;
-    console.log({ resetToken, password });
-
-
-    if (!password) {
-        return next(new AppError('Password is required', 400));
-    }
-
-    if (!resetToken) {
-        return next(new AppError('Reset Token is missing', 400));
-    }
-
-    const hashToken = crypto.createHash('sha256')
-        .update(resetToken)
-        .digest('hex');
-
-    console.log("HashForgotPassword Token is: ", hashToken);
-
-    try {
-        const user = await User.findOne({
-            forgotPasswordToken: hashToken,
-            // forgotPasswordExpiry: { $gt: Date.now() }
-        });
-
-        if (!user) {
-            return next(new AppError('Invalid Token or token is expired', 400));
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        user.password = hashedPassword;
-        user.forgotPasswordExpiry = undefined;
-        user.forgotPasswordToken = undefined;
-        await user.save();
-
-        res.status(200).json({
-            success: true,
-            message: 'Password Changed Successfully'
-        })
-
-    } catch (e) {
-        return next(new AppError(e.message, 400));
-    }
-
-
-}
-
-const changePassword = async (req, res, next) => {
-    // console.log("request is: ", req);
-    // console.log("response is: ", req);
-    const { oldPassword, newPassword } = req.body;
-    const { id } = req.user;
-
-
-    if (!oldPassword || !newPassword) {
-        return next(new AppError('Both old and new passwords are required to update your password', 400))
-    }
-
-    if (!id) {
-        return next(new AppError('User does not exists', 400));
-    }
-
-
-    if (oldPassword == newPassword) {
-        return next(new AppError('New Password cannot be same as Old Password', 400));
-    }
-
-
-    try {
-        const user = await User.findById(id).select('+password');
-
-        const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
-
-        if (!isPasswordCorrect) {
-            return next(new AppError('Password does not match', 400));
-        }
-
-
-        const encryptedPassword = await bcrypt.hash(newPassword, 10);
-        user.password = encryptedPassword;
-
-        await user.save();
-        user.password = undefined;
-        return res.status(200).json({
-            success: true,
-            message: "Password changed successfully"
-        })
-    } catch (e) {
-        return next(new AppError(e.message, 400));
-    }
-}
 
 const updateUser = async (req, res, next) => {
 
@@ -399,49 +258,7 @@ const updateUser = async (req, res, next) => {
 }
 
 
-const deleteUser = async (req, res, next) => {
-    const { email, password } = req.body;
 
 
-    if(!password || !email){
-        return next(new AppError('Please provide your password and email', 400))
-    }
 
-    try {
-        const user = await User.findOne({ email }).select("+password");
-
-        if (!user) {
-            // User with the provided email does not exist
-            return res.status(404).json({
-                message: 'User not found',
-            });
-        }
-
-        const isPasswordCorrect = await bcrypt.compare(password,user.password);
-
-        if(!isPasswordCorrect){
-            return next(new AppError('Password Incorrect'), 400);
-        }
-
-        //delete avatar from cloudinary
-        if (user.avatar) {
-            await cloudinary.v2.uploader.destroy(user.avatar.public_id);
-        } else {
-            console.log("No avatar on cloudinary");
-        }
-
-
-        await User.deleteOne({ _id: user._id });
-
-        return res.status(200).json({
-            message: 'User deleted successfully',
-        });
-    } catch (e) {
-        console.log(e.message);
-        return next(new AppError('Something went wrong', 500))
-    }
-
-}
-
-
-export { register, login, logout, getProfile, forgotPassword, resetPassword, changePassword, updateUser, deleteUser };
+export { register, login, logout, getProfile, updateUser };

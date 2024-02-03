@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import jwt  from "jsonwebtoken";
 import crypto from 'crypto';
 const userSchema  = mongoose.Schema({
-
     fullName: {
         type : String,
         required:[true,"Name is required"],
@@ -38,25 +37,16 @@ const userSchema  = mongoose.Schema({
         enum:["USER","ADMIN"],
         default:'USER',
     },
-    forgotPasswordToken:String,
-    forgotPasswordExpiry: Date,
-    subscription:{
-        id:String,
-        status:String
-    }
     
 },{ timeStamps:true});
 
 
 userSchema.methods = {
     generateJWTToken: async function(){
-        console.log('token bna rhe h');
         return await jwt.sign(
             {
                 id:this._id, 
                 email:this.email, 
-                subscription: this.subscription, 
-                role:this.role
             },
             process.env.JWT_SECRET,
             {
@@ -65,22 +55,7 @@ userSchema.methods = {
         )
 
     },
-    generatePasswordResetToken: async function(){
-        const resetToken = crypto.randomBytes(20).toString('hex');
-        console.log("ResetToken:", resetToken);
-        this.forgotPasswordToken = crypto
-                                   .createHash('sha256')
-                                   .update(resetToken)
-                                   .digest('hex');
-
-        console.log("Hashed token: ", this.forgotPasswordToken);
-        this.forgotPasswordExpiry = Date.now() + 15*60*1000; //15 min from now
-        return resetToken;
-    }
 }
-
-
-
 const User = mongoose.model('User', userSchema);
 
 export default User;
